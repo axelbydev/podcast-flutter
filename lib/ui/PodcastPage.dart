@@ -4,6 +4,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:podax_flutter/model/PlaylistCubit.dart';
 import 'package:podax_flutter/model/PlaylistEntry.dart';
 import 'package:podax_flutter/model/db.dart';
+import 'package:podax_flutter/services/rss.dart';
 
 import '../model/Episode.dart';
 import '../model/Podcast.dart';
@@ -26,8 +27,24 @@ class PodcastPage extends StatelessWidget {
         future: DBProvider.db.getPodcast(args.podcastId),
         builder: (context, snapshot) {
           final data = snapshot.data;
+          final rssUrl = data?.rssUrl;
           return Chrome(
             title: data?.title,
+            actions: [
+              Padding(
+                  padding: EdgeInsets.only(right: 20),
+                  child: GestureDetector(
+                    onTap: () async {
+                      if (rssUrl != null) {
+                        final podcast = await fetchRSS(rssUrl);
+                        if (podcast != null) DBProvider.db.savePodcast(podcast);
+                        Navigator.pushReplacementNamed(context, PodcastPage.routeName,
+                            arguments: PodcastPageArguments(args.podcastId));
+                      }
+                    },
+                    child: Icon(Icons.refresh, size: 26),
+                  ))
+            ],
             body: data != null
                 ? EpisodeList(podcast: data)
                 : snapshot.connectionState == ConnectionState.done
@@ -95,7 +112,7 @@ class SubscribeButton extends StatelessWidget {
       return ElevatedButton(
         child: Text(snapshot.any((p) => p.rssUrl == podcast.rssUrl) ? "UNSUBSCRIBE" : "SUBSCRIBE"),
         style: ElevatedButton.styleFrom(
-            primary: Theme.of(context).colorScheme.secondary,
+            backgroundColor: Theme.of(context).colorScheme.secondary,
             textStyle: TextStyle(color: Theme.of(context).textTheme.headline1?.color)),
         onPressed: () {
           context.read<SubscriptionsCubit>().toggleSubscription(podcast);

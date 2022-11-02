@@ -64,7 +64,7 @@ class _HomePageState extends State<HomePage> {
 
   FloatingActionButton _fab = FloatingActionButton(
     onPressed: () {},
-    tooltip: 'Increment',
+    tooltip: 'Add RSS by URL',
     child: Icon(Icons.add),
   );
 

@@ -23,6 +23,8 @@ class DBProvider {
     await db.execute("CREATE UNIQUE INDEX IF NOT EXISTS podcasts_rss_uniq ON podcasts(rss_url);");
     await db.execute(
         "CREATE TABLE IF NOT EXISTS episodes(id INTEGER PRIMARY KEY AUTOINCREMENT, title TEXT, link TEXT, content TEXT, pub_date TEXT, enclosure_url TEXT, last_position NUMBER, podcast_id INTEGER, FOREIGN KEY(podcast_id) REFERENCES podcasts(id));");
+    await db.execute(
+        "CREATE UNIQUE INDEX IF NOT EXISTS episode_enclosure_url_uniq ON episodes(enclosure_url);");
     await db.execute("CREATE TABLE IF NOT EXISTS subscriptions(rss_url TEXT PRIMARY KEY)");
     await db.execute(
         "CREATE TABLE IF NOT EXISTS playlist(id INTEGER PRIMARY KEY AUTOINCREMENT, position INTEGER, episode_id INTEGER, placemark REAL, FOREIGN KEY(episode_id) REFERENCES episodes(id));");
@@ -67,8 +69,15 @@ class DBProvider {
 
   Future<int> savePodcast(Podcast podcast) async {
     final db = await database;
+    final values = podcast.toDB();
+    final existingPodcast = await db.query("podcasts",
+        columns: ["id"], where: "rss_url = ?", whereArgs: [podcast.rssUrl]);
+    if (existingPodcast.isNotEmpty) {
+      values["id"] = existingPodcast[0]["id"];
+    }
+    print(values);
     final podcastId =
-        await db.insert("podcasts", podcast.toDB(), conflictAlgorithm: ConflictAlgorithm.replace);
+        await db.insert("podcasts", values, conflictAlgorithm: ConflictAlgorithm.replace);
     podcast.episodes.forEach((episode) async => {
           await db.insert("episodes", episode.toDB(podcastId),
               conflictAlgorithm: ConflictAlgorithm.replace)
@@ -141,7 +150,7 @@ class DBProvider {
 
   Future completeEpisode(Episode episode) async {
     final db = await database;
-    await db.update("episodes", {"last_position": 0}, where: "id = ?", whereArgs: [episode.id]);
+    await db.update("episodes", {"last_position": 0.0}, where: "id = ?", whereArgs: [episode.id]);
     await db.delete("playlist", where: "episodeId = ?", whereArgs: [episode.id]);
     await _reorderPlaylist();
   }

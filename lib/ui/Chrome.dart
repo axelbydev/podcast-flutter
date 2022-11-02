@@ -3,13 +3,21 @@ import 'package:sliding_up_panel/sliding_up_panel.dart';
 
 import 'PlayerRow.dart';
 
+const emptyList = <Widget>[];
+
 class Chrome extends StatefulWidget {
   final String? title;
   final Widget? bottomNavigationBar;
   final Widget? body;
   final Widget? floatingActionButton;
+  final List<Widget> actions;
 
-  Chrome({this.title, this.bottomNavigationBar, this.body, this.floatingActionButton});
+  Chrome(
+      {this.title,
+      this.bottomNavigationBar,
+      this.body,
+      this.floatingActionButton,
+      this.actions = emptyList});
 
   @override
   _ChromeState createState() => _ChromeState();
@@ -24,7 +32,7 @@ class _ChromeState extends State<Chrome> {
       body: Padding(
           padding: EdgeInsets.fromLTRB(0, 0, 0, 50),
           child: Scaffold(
-            appBar: AppBar(title: Text(widget.title ?? "Podax")),
+            appBar: AppBar(title: Text(widget.title ?? "Podax"), actions: widget.actions),
             bottomNavigationBar: widget.bottomNavigationBar,
             body: widget.body,
             floatingActionButton: widget.floatingActionButton,

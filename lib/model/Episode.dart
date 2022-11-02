@@ -18,7 +18,7 @@ class Episode {
         content = obj['content'],
         pubDate = DateTime.parse(obj['pub_date']),
         enclosure = obj['enclosure_url'],
-        lastPosition = obj['last_position'] ?? 0;
+        lastPosition = obj['last_position'].toDouble() ?? 0;
 
   Map<String, dynamic> toDB(int podcastId) {
     Map<String, dynamic> data = {
